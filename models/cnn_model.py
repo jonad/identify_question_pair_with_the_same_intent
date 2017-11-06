@@ -3,22 +3,22 @@ from keras.models import Model
 from keras.layers import Conv2D, MaxPooling2D, Input, merge, Reshape
 from keras.layers.merge import Dot
 
-FILEPATH = '/output/model.weights.best.hdf5'
+FILEPATH = 'models/model.weights.best.hdf5'
 
 
 class CnnModel(object):
-    def __init__(self, filter_size, strides, padding, embedding_len, activation,filters, k_initialization, b_initialization, pool_size, input_shape, bias):
+    def __init__(self, filter_size, strides, padding, embedding_len, activation,filters, k_initialization, b_initialization, input_shape, bias):
         # initialize the model
         self.filepath = FILEPATH
         self.cnn_model = self._build_model(filter_size, strides, padding, embedding_len, activation,filters, k_initialization,
-                                           b_initialization, pool_size, input_shape, bias)
+                                           b_initialization, input_shape, bias)
 
     @classmethod
     def from_weights(cls, filepath, filter_size, strides, padding, embedding_len, activation,filters, k_initialization,
-                                           b_initialization, pool_size, input_shape, bias):
+                                           b_initialization, input_shape, bias):
         
         self = cls(filter_size, strides, padding, embedding_len, activation, filters,
-                                           k_initialization, b_initialization, pool_size, input_shape, bias)
+                                           k_initialization, b_initialization, input_shape, bias)
         self.filepath = filepath
         self.cnn_model.load_weights(filepath)
         return self
@@ -69,14 +69,15 @@ class CnnModel(object):
         return [cnn(sentence) for cnn in cnns]
     
     
-    def _max_pool_sentences_layer(self, models, pool_size):
-        '''
-        perform a max pooling of a given tensor
-        :param models: tensor to perform a max pooling
-        :param pool_size: pooling size
-        :return: a tensor
-        '''
-        return [MaxPooling2D(pool_size=pool_size)(model) for model in models]
+    def _max_pool_sentences_layer(self, models, sentence_len, filters):
+       '''
+       Perform max pooling
+       :param models:
+       :param sentence_len: sentence length
+       :param filters: filter arrays
+       :return:
+       '''
+       return [MaxPooling2D(pool_size=(sentence_len - filter_len + 1, 1))(model) for model, filter_len in zip(models, filters)]
     
     def _merge_concat_layer(self, model):
         '''
@@ -95,7 +96,7 @@ class CnnModel(object):
         '''
         return Dot(axes=1, normalize=True)([model_1, model_2])
     
-    def  _build_model(self,filter_size, strides, padding, embedding_len, activation,filters, k_initialization, b_initialization, pool_size, input_shape, bias):
+    def  _build_model(self,filter_size, strides, padding, embedding_len, activation,filters, k_initialization, b_initialization, input_shape, bias):
         '''
         create a Convolutional neural network
         :param filter_size: filter size value
@@ -111,6 +112,7 @@ class CnnModel(object):
         :param bias: boolean value for whether or not to use bias.
         :return: Convolutional neural network model.
         '''
+        sentence_len = input_shape[0]
         # define input
         sentence_1_input = self._input_sentence(input_shape)
         sentence_2_input =self._input_sentence(input_shape)
@@ -129,10 +131,10 @@ class CnnModel(object):
     
         # Max pool layer
         ## sentence 1 max pool
-        sentence_1_max_pool = self._max_pool_sentences_layer(sentence_1_cnn_layer, pool_size)
+        sentence_1_max_pool = self._max_pool_sentences_layer(sentence_1_cnn_layer, sentence_len, filters)
     
         ## Sentence 2 max pool
-        sentence_2_max_pool = self._max_pool_sentences_layer(sentence_2_cnn_layer, pool_size)
+        sentence_2_max_pool = self._max_pool_sentences_layer(sentence_2_cnn_layer, sentence_len, filters)
     
         # concat layer
         ## Sentence 1 concat layer

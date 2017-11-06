@@ -1,0 +1,7 @@
+data
+models/model.w2v
+models/model.weights.best.hdf5
+.DS_Store
+.gitignore
+.idea
+

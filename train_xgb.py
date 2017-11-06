@@ -1,10 +1,11 @@
-from code.xgboost_model import *
-from code.utils import split_dataset_xgb
 from collections import defaultdict
+
 import pandas as pd
 
+from models.xgboost_model import *
+from utils.utils import split_dataset_xgb
 
-FILE_NAME = '/data/quora_xgb.pickle'
+FILE_NAME = 'data/quora_xgb.pickle'
 
 
 seed = 10
@@ -19,9 +20,9 @@ def main():
     
     # set tuning parameters
     params_grid = defaultdict(list)
-    params_grid['n_estimators'] = range(100, 1050, 50)
+    #params_grid['n_estimators'] = range(100, 1050, 50)
     params_grid['learning_rate'] = [0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-    params_grid['max_depth'] = range(2, 12, 2)
+    #params_grid['max_depth'] = range(2, 12, 2)
     # params_grid['subsample'] = [0.5, 0.75, 1.0]
     # params_grid['colsample_bytree'] = [0.4, 0.6, 0.8, 1.0]
     params_grid = dict(params_grid)
@@ -40,7 +41,7 @@ def main():
     predictions = [round(value) for value in y_pred]
     acc, f1 = xgb_model.evaluate(y_test, predictions)
     print(acc, f1)
-    pickle.dump(xgb_model, open("/output/quora_model.dat", "wb"))
+    pickle.dump(xgb_model, open("models/quora_model.dat", "wb"))
     
     
 if __name__ == '__main__':
