@@ -6,7 +6,7 @@
 *  [**Gensim**](https://radimrehurek.com/gensim/install.html)
 * [**Keras 2.0**](https://keras.io/)
 * [**NLTK**](http://www.nltk.org/)
-* [****]
+* [**xgboost**](https://xgboost.readthedocs.io/en/latest/)
 
 ### Dataset
 * [**Training data**](https://www.kaggle.com/c/quora-question-pairs/data)
