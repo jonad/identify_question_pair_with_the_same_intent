@@ -4,4 +4,5 @@ models/model.weights.best.hdf5
 .DS_STORE
 .gitignore
 .idea
+.ipynb_checkpoints
 

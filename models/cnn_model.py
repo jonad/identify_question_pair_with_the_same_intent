@@ -1,12 +1,15 @@
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.models import Model
-from keras.layers import Conv2D, MaxPooling2D, Input, merge, Reshape
+from keras.layers import Conv2D, MaxPooling2D, Input, merge, Reshape, Dropout
 from keras.layers.merge import Dot
+from keras.constraints import max_norm
 
 FILEPATH = 'models/model.weights.best.hdf5'
 
 
 class CnnModel(object):
+    ''' Convolutional neural network model for question pair similarity '''
+    
     def __init__(self, filter_size, strides, padding, embedding_len, activation,filters, k_initialization, b_initialization, input_shape, bias):
         # initialize the model
         self.filepath = FILEPATH
@@ -28,112 +31,115 @@ class CnnModel(object):
                             embedding_len, activation, \
                             bias, k_initialization, b_initialization, filters ):
         '''
-        Define a list of convolutions.
-        :param filter_size: filter size value
-        :param strides: strides value
-        :param padding: padding
-        :param embedding_len: embedding length
-        :param activation: activation function
-        :param bias: whether to use bias or not
-        :param k_initialization: kernel initialization value
-        :param b_initialization: bias initialization values
-        :param filters: filter length list
-        :return: a list of convolution.
+        Defines a list of 2D convolution operations.
+        :param filter_size: Integer, the dimensionality of the output space.
+        :param strides: An integer or tuple/list of 2 integers, specifying the stride of the convolution.
+        :param padding: Type of padding, one of  'valid' or 'same'.
+        :param embedding_len: An integer, specifying the width of the 2D convolution window.
+        :param activation: Activation function to use.
+        :param bias: Boolean, whether the layer uses a bias vector.
+        :param k_initialization: Initializer for the kernel weight matrix.
+        :param b_initialization: Initializer for the bias vector.
+        :param filters: A list of integer, specifying the different heights of the 2D convolution window.
+        :return: A list of 2D convolution operations.
         '''
     
         cnns = [Conv2D(filters=filter_size, kernel_size=(filter_len, embedding_len), \
                        strides=strides, padding=padding, activation=activation,
                        use_bias=bias, kernel_initializer=k_initialization,
-                       bias_initializer=b_initialization) for filter_len in filters]
+                       bias_initializer=b_initialization, kernel_constraint=max_norm(4.)) for filter_len in filters]
     
         return cnns
     
-    
-
 
     def _input_sentence(self, shape):
         '''
-        Define the input tensor
-        :param shape: input shape
-        :return: a tensor with the given shape
+        Defines the input shape.
+        :param shape: Tuple of input shape
+        :return: A tensor with shape (None, shape)
         '''
         return Input(shape=shape)
     
     def _cnn_sentences_layer(self, cnns, sentence):
         '''
-        Compute convolutional tensor with different filter length
-        :param cnns: list of tensor with different filter
-        :param input_shape: input tensor
-        :return: a list of convolutional tensor with different filter length.
+        Computes a list of 2D convolution operations on an input sentence.
+        :param cnns: a list of 2D convolution operations.
+        :param sentence: input sentence.
+        :return: A list of 2D convolution layer.
         '''
         return [cnn(sentence) for cnn in cnns]
     
     
     def _max_pool_sentences_layer(self, models, sentence_len, filters):
        '''
-       Perform max pooling
-       :param models:
-       :param sentence_len: sentence length
-       :param filters: filter arrays
-       :return:
+       Computes 2D max pooling operation.
+       :param models: List of input tensors.
+       :param sentence_len: Integer, factor by which to downscale horizontally.
+       :param filters: List of factors by which to downscale vertically.
+       :return: A list of tensor from the 2D max pooling operation.
        '''
        return [MaxPooling2D(pool_size=(sentence_len - filter_len + 1, 1))(model) for model, filter_len in zip(models, filters)]
     
     def _merge_concat_layer(self, model):
         '''
-        Concatenate filter of a given tensor
-        :param model: tensor to concatenate
-        :return: concatenated tensor
+        Concatenates a list of tensors.
+        :param model: Tensors to concatenate
+        :return: A tensor from the concatenate operation.
         '''
         return  merge(model, mode='concat')
     
     def _merge_cosim_layer(self, model_1, model_2):
         '''
-        cosine similarity layer
-        :param model_1: model 1
-        :param model_2: model 2
-        :return: a tensor which is a cosine similarity value between model_1 and model_2
+        Computes the cosine similarity between two tensors.
+        :param model_1: The first tensor.
+        :param model_2: The second tensor.
+        :return: The cosine similarity value between model_1 and model_2.
         '''
         return Dot(axes=1, normalize=True)([model_1, model_2])
     
-    def  _build_model(self,filter_size, strides, padding, embedding_len, activation,filters, k_initialization, b_initialization, input_shape, bias):
+    def  _build_model(self,filter_size, strides, padding, embedding_len, activation,filters, k_initialization, b_initialization, input_shape, bias, dropout=0.3):
         '''
-        create a Convolutional neural network
-        :param filter_size: filter size value
-        :param strides: stride tuple
-        :param padding: padding value
-        :param embedding_len: length of embedding sentences
-        :param activation: activation function.
-        :param filters: filter array
-        :param k_initialization: kernel initialization value.
-        :param b_initialization: bias initialization values
-        :param pool_size: value or tuple for the pool size
-        :param input_shape: input shape
-        :param bias: boolean value for whether or not to use bias.
+        Defines the convolutional neural network model.
+        :param filter_size: Number of output.
+        :param strides: Stride.
+        :param padding: Padding value.
+        :param embedding_len: Filter width.
+        :param activation: Activation function.
+        :param filters: List of integer - filters heights.
+        :param k_initialization: Kernel initialization value.
+        :param b_initialization: Bias initialization values
+        :param input_shape: Input shape
+        :param bias: Boolean, whether to use bias.
+        :param dropout: Dropout value.
         :return: Convolutional neural network model.
         '''
         sentence_len = input_shape[0]
+        
         # define input
         sentence_1_input = self._input_sentence(input_shape)
         sentence_2_input =self._input_sentence(input_shape)
     
-        # cnn layer
+        # convolutional layer
         cnns = self._convolutional_layer(filter_size, strides, padding, \
                             embedding_len, activation, \
                             bias, k_initialization, b_initialization, filters )
     
     
-        ## sentence 1 cnn layer
+        ## sentence 1 convolutional layer
         sentence_1_cnn_layer = self._cnn_sentences_layer(cnns, sentence_1_input)
+        ## add dropout regularization parameter
+        sentence_1_cnn_layer = [Dropout(dropout)(cnn) for cnn in sentence_1_cnn_layer]
     
-        ##sentence 2 cnn layer
+        ##sentence 2 convolutional layer
         sentence_2_cnn_layer = self._cnn_sentences_layer(cnns, sentence_2_input)
+        ## add dropout regularization parameter
+        sentence_2_cnn_layer = [Dropout(dropout)(cnn) for cnn in sentence_2_cnn_layer]
     
-        # Max pool layer
-        ## sentence 1 max pool
+        # Max pooling layer
+        ## sentence 1 max pooling layer
         sentence_1_max_pool = self._max_pool_sentences_layer(sentence_1_cnn_layer, sentence_len, filters)
     
-        ## Sentence 2 max pool
+        ## Sentence 2 max pooling layer
         sentence_2_max_pool = self._max_pool_sentences_layer(sentence_2_cnn_layer, sentence_len, filters)
     
         # concat layer
@@ -158,56 +164,54 @@ class CnnModel(object):
     
     def compile(self, loss, optimizer, metrics ):
         '''
-        
-        :param loss:
-        :param optimizer:
-        :param metrics:
-        :return:
+        Configures the model for training.
+        :param loss:  String (name of objective function) or objective function.
+        :param optimizer: String (name of optimizer) or optimizer instance.
+        :param metrics: list of metrics to be evaluated by the model during training and testing.
         '''
         self.cnn_model.compile(loss=loss, optimizer=optimizer,  metrics=metrics)
 
     def train(self, X_train, y_train, batch_size, epochs, validation_data, verbose=2, shuffle=True ):
         '''
-        Train the model
-        :param X_train:
-        :param y_train:
-        :param batch_size:
-        :param epochs:
-        :param validation_data:
-        :param verbose:
-        :param shuffle:
-        :return:
+        Trains the model for a fixed number of epochs.
+        :param X_train: List of Numpy arrays of training data.
+        :param y_train: List of Numpy arrays of target data.
+        :param batch_size: Number of samples per gradient update.
+        :param epochs: Number of epochs to train the model.
+        :param validation_data: Tuple on which to evaluate the loss and any model metric at the end of each epoch.
+        :param verbose: Verbosity mode - 0, 1, 2.
+        :param shuffle: Boolean (True or False)- whether to shuffle the training data before each epoch.
         '''
         checkpointer = ModelCheckpoint(filepath=self.filepath, verbose=1,
                                    save_best_only=True)
+        tensorboarCb = TensorBoard(log_dir='/output/Graph', histogram_freq=0, write_graph=True,
+                                                 write_images=True)
         self.cnn_model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs,
                          validation_data=validation_data,
-                         callbacks=[checkpointer],
+                         callbacks=[checkpointer, tensorboarCb],
                          verbose=verbose, shuffle=shuffle)
         
     def evaluate(self, X_test, y_test, verbose=0):
         '''
-        Evaluate the model
-        :param X_test:
-        :param y_test:
-        :param verbose:
-        :return:
+        Returns the loss value and metrics values for the model in test mode.
+        :param X_test: List of Numpy array of test data.
+        :param y_test: List of Numpy array of target data.
+        :param verbose: Verbosity mode 0 or 1.
+        :return: List of scalar - test loss and metrics values.
         '''
         return self.cnn_model.evaluate(X_test, y_test, verbose=verbose)
         
         
     def predict(self, x):
         '''
-        Predict x
-        :param x:
-        :return:
+        Generates output predictions for the input samples.
+        :param x: List of Numpy array of the input data.
+        :return: Numpy array of predictions.
         '''
         return self.cnn_model.predict(x)
     
     def summary(self):
         '''
-        Summarize the model.
-        :return: output the summary data.
+        Prints the summary representation of the model.
         '''
         self.cnn_model.summary()
-    
