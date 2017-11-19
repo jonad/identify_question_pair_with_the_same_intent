@@ -5,7 +5,7 @@ import numpy as np
 FILENAME = 'model.w2v'
 
 class Word2VecModel(object):
-    
+    '''In domain word embeddings model using word2vec algorithm'''
     def __init__(self):
         self._model = None
         self.filename = FILENAME
@@ -20,16 +20,14 @@ class Word2VecModel(object):
     def create_w2v_model(self, sentences, num_features, min_word, context,
                          sg, downsampling, seed):
         '''
-        Build the word2vec model.
-        :param sentences: sentence corpus.
-        :param num_features: number of features length
-        :param min_word: mininum word
-        :param context: context size
-        :param sg: whether to use skip gram 1 or cbow 0
-        :param downsampling: downsampling value
-        :param seed: seed
-        :param directory: directory to save the model to
-        :param model_name: model name
+        Builds the word2vec model from a corpus of text.
+        :param sentences: List of list of string, the corpus.
+        :param num_features: Integer, embedding length.
+        :param min_word: Integer, the algorithm will ignore all word with frequency lower than min_word.
+        :param context: Integer, window size, the maximum distance between the current and predicted word within the sentence.
+        :param sg: Integer - 0 or 1 -, which indicates whether to use the skip-gram archittecture (1), or the continuous bag of words archittecture (0).
+        :param downsampling: Threshold for configuring which higher-frequency words are randomly downsampled;
+        :param seed: Integer, a random seed.
         :return: the word2vec model
         '''
     
@@ -52,11 +50,10 @@ class Word2VecModel(object):
 
     def get_w2v_vector(self, sentence, vector_size):
         '''
-        Get the word2vec vector of a given sentence.
-        :param model: word2vec model
-        :param sentence: sentence
-        :param vector_size: vector size
-        :return: a word2vec vector of a given sentence
+        Gets the word representations of a given sentence.
+        :param sentence: List of string, the input sentence.
+        :param vector_size: Integer, embedding size.
+        :return: A list of word representations.
         '''
     
         sentence_len = len(sentence)
@@ -67,19 +64,3 @@ class Word2VecModel(object):
             sentence2vec[i] = word_vector
     
         return sentence2vec
-
-    def get_w2v_vectors(self, dataframe, vector_size, colnames):
-        '''
-    
-        :param dataset:
-        :param model:
-        :param vector_size:
-        :param colnames:
-        :param directory:
-        :param name:
-        :return:
-        '''
-        for col in colnames:
-            dataframe[col] = dataframe[col].apply(lambda x: self.get_w2v_vector(x, vector_size))
-    
-        return dataframe
