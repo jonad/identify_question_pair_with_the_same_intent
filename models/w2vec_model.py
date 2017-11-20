@@ -2,8 +2,7 @@ import gensim.models.word2vec as w2v
 import multiprocessing
 import numpy as np
 
-FILENAME = 'model.w2v'
-
+FILENAME = 'models/model.w2v'
 class Word2VecModel(object):
     '''In domain word embeddings model using word2vec algorithm'''
     def __init__(self):

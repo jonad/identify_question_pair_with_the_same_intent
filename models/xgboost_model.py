@@ -2,7 +2,7 @@ import pickle
 import xgboost as xgb
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.metrics import accuracy_score, f1_score
-from utils import save_result
+from utils.utils import save_result
 
 
 
@@ -23,7 +23,7 @@ class XgbModel(object):
         '''
         self = cls()
         self._model = pickle.load(open(model_weights, 'rb'))
-        self._modelfile = model_weights
+        self._model_weights = model_weights
         return self
     
     @classmethod
@@ -46,6 +46,7 @@ class XgbModel(object):
                 num_folds, param_grid,
                 scoring, seed)
         self._model = xgb.XGBClassifier(nthread=-1, **self._bestparams)
+        pickle.dump(self._model, open(self._model_weights, "wb"))
         return self
     
     def search_xgb_params(self, X_train, y_train,
@@ -75,7 +76,7 @@ class XgbModel(object):
             elt['mean_test_score'] = mean_test_score[i]
             elt['mean_train_score'] = mean_train_score[i]
             results.append(elt)
-        save_result('/output/results.csv', results)
+        save_result('data/xgb_results.csv', results)
         return best_score, best_params
         
     def train(self, X_train, y_train):

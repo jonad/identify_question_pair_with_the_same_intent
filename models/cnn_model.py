@@ -184,11 +184,10 @@ class CnnModel(object):
         '''
         checkpointer = ModelCheckpoint(filepath=self.filepath, verbose=1,
                                    save_best_only=True)
-        tensorboarCb = TensorBoard(log_dir='/output/Graph', histogram_freq=0, write_graph=True,
-                                                 write_images=True)
+        
         self.cnn_model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs,
                          validation_data=validation_data,
-                         callbacks=[checkpointer, tensorboarCb],
+                         callbacks=[checkpointer],
                          verbose=verbose, shuffle=shuffle)
         
     def evaluate(self, X_test, y_test, verbose=0):
