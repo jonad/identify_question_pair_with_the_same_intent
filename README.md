@@ -1,4 +1,6 @@
 ## Project: Identify question pair with the same intent.
+## Network archittecture
+![Archittecture](network2.png)
 ### Install
 * [**Python 3.6**](https://www.python.org/downloads/release/python-350/)
 *  [**Gensim**](https://radimrehurek.com/gensim/install.html)
