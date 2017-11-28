@@ -74,8 +74,8 @@ class CnnModel(object):
        '''
        Computes 2D max pooling operation.
        :param models: List of input tensors.
-       :param sentence_len: Integer, factor by which to downscale horizontally.
-       :param filters: List of factors by which to downscale vertically.
+       :param sentence_len: Integer, the length of the sentence.
+       :param filters: List of filters.
        :return: A list of tensor from the 2D max pooling operation.
        '''
        return [MaxPooling2D(pool_size=(sentence_len - filter_len + 1, 1))(model) for model, filter_len in zip(models, filters)]

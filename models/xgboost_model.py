@@ -11,20 +11,8 @@ class XgbModel(object):
     
     def __init__(self):
         self._model = None
-        self._model_weights = None
         self._bestparams = {}
         
-    @classmethod
-    def from_weights(cls, model_weights):
-        '''
-        Alternate constructor for XgbModel class, create an Xgb model from pre-trained weights.
-        :param model_weights:
-        :return: An instance of XgbModel class.
-        '''
-        self = cls()
-        self._model = pickle.load(open(model_weights, 'rb'))
-        self._model_weights = model_weights
-        return self
     
     @classmethod
     def from_params(cls, X_train, y_train,
@@ -46,7 +34,6 @@ class XgbModel(object):
                 num_folds, param_grid,
                 scoring, seed)
         self._model = xgb.XGBClassifier(nthread=-1, **self._bestparams)
-        pickle.dump(self._model, open(self._model_weights, "wb"))
         return self
     
     def search_xgb_params(self, X_train, y_train,

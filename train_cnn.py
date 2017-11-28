@@ -24,7 +24,7 @@ seed = 10
 acc = make_accuracy(0)
 fbeta = make_fbeta(0)
 
-FILE_PATH = 'data/test_cnn.pickle'
+FILE_PATH = 'data/quora_cnn_train.pickle'
 def main():
     # Prepare data
     data_cnn = pd.read_pickle(FILE_PATH)

@@ -1,5 +1,3 @@
-# Machine Learning Engineer Nanodegree
-# Capstone Project
 ## Project: Identify question pair with the same intent.
 ### Install
 * [**Python 3.6**](https://www.python.org/downloads/release/python-350/)

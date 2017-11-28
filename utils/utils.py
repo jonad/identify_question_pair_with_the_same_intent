@@ -6,7 +6,7 @@ import re
 from numpy.linalg import norm
 import csv
 
-stop_words = stopwords.words('english')
+#stop_words = stopwords.words('english')
 
 
 def reshape_data(sentence_1_data, sentence_2_data, y_data):
@@ -192,3 +192,19 @@ def make_fbeta(threshold_shift):
         return (beta_squared + 1) * (precision * recall) / (beta_squared * precision + recall + K.epsilon())
     
     return fbeta
+
+def get_w2v_vector(model, sentence, vector_size):
+    '''
+    Get the word2vec vector of a given sentence.
+    :param model: word2vec model
+    :param sentence: sentence
+    :param vector_size: vector size
+    :return: a word2vec vector of a given sentence
+    '''
+    sentence_len = len(sentence)
+    sentence2vec = np.zeros(shape=(sentence_len, vector_size), dtype='float32')
+    for i in range(sentence_len):
+        word = sentence[i]
+        word_vector = model[word]
+        sentence2vec[i] = word_vector
+    return sentence2vec
