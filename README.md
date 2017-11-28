@@ -34,5 +34,5 @@ This will train the xgboost model. You can modify this file to run the model
 with different parameter.
 
 ### Amazing Result
-![][Result](result.png)
+![Result](result.png)
 ### Do not run this code on your laptop, run it on a GPU instance on the cloud.
